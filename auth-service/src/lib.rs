@@ -1,6 +1,7 @@
 use std::error::Error;
 
-use axum::{serve::Serve, Router};
+use axum::{http::StatusCode, response::IntoResponse, routing::{self, post}, serve::Serve, Router};
+
 use tower_http::services::ServeDir;
 // This struct encapsulates our application-related logic.
 pub struct Application {
@@ -16,7 +17,12 @@ impl Application {
         // Also, remove the `hello` route.
         // We don't need it at this point!
         let router = Router::new()
-        .nest_service("/", ServeDir::new("assets"));
+            .nest_service("/", ServeDir::new("assets"))
+            .route("/signup", post(signup)) // Example route
+            .route("/login", post(login)) // Example route
+            .route("/verify-2fa", post(verify_2fa)) // Example route
+            .route("/logout", post(logout)) // Example route
+            .route("/verify-token", post(verify_token)); // Example route
 
         let listener = tokio::net::TcpListener::bind(address).await?;
         let address = listener.local_addr()?.to_string();
@@ -33,4 +39,26 @@ impl Application {
         println!("listening on {}", &self.address);
         self.server.await
     }
+}
+
+// Example route handler.
+// For now we will simply return a 200 (OK) status code.
+async fn signup() -> impl IntoResponse {
+    StatusCode::OK.into_response()
+}
+
+async fn login() -> impl IntoResponse {
+    StatusCode::OK.into_response()
+}
+
+async fn verify_2fa() -> impl IntoResponse {
+    StatusCode::OK.into_response()
+}
+
+async fn logout() -> impl IntoResponse {
+    StatusCode::OK.into_response()
+}
+
+async fn verify_token() -> impl IntoResponse {
+    StatusCode::OK.into_response()
 }
