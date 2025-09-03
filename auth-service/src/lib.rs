@@ -1,12 +1,15 @@
 use std::error::Error;
 
 use axum::{routing:: post, serve::Serve, Router};
-
+use app_state::AppState;
 use tower_http::services::ServeDir;
 
 use routes::*;
 
 pub mod routes;
+pub mod app_state;
+pub mod services;
+pub mod domain;
 
 // This struct encapsulates our application-related logic.
 pub struct Application {
@@ -17,17 +20,18 @@ pub struct Application {
 }
 
 impl Application {
-    pub async fn build(address: &str) -> Result<Self, Box<dyn Error>> {
+    pub async fn build(app_state: AppState, address: &str) -> Result<Self, Box<dyn Error>> {
         // Move the Router definition from `main.rs` to here.
         // Also, remove the `hello` route.
         // We don't need it at this point!
         let router = Router::new()
             .nest_service("/", ServeDir::new("assets"))
-            .route("/signup", post(signup)) // Example route
-            .route("/login", post(login)) // Example route
-            .route("/verify-2fa", post(verify_2fa)) // Example route
-            .route("/logout", post(logout)) // Example route
-            .route("/verify-token", post(verify_token)); // Example route
+            .route("/signup", post(signup))
+            .route("/login", post(login))
+            .route("/verify-2fa", post(verify_2fa))
+            .route("/logout", post(logout))
+            .route("/verify-token", post(verify_token))
+            .with_state(app_state);
 
         let listener = tokio::net::TcpListener::bind(address).await?;
         let address = listener.local_addr()?.to_string();
