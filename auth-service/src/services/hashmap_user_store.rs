@@ -1,14 +1,7 @@
 use std::collections::HashMap;
 
-use crate::domain::User;
+use crate::domain::{Email, Password, User, UserStore, UserStoreError};
 
-#[derive(Debug, PartialEq)]
-pub enum UserStoreError {
-    UserAlreadyExists,
-    UserNotFound,
-    InvalidCredentials,
-    UnexpectedError,
-}
 
 //                                    //  DONE-TODO:
 //                                    //  Create a new struct called `HashmapUserStore` containing a users`
@@ -17,11 +10,12 @@ pub enum UserStoreError {
 //                                    //  Derive the `Default` trait for `HashmapUserStore`.
 #[derive(Default)]
 pub struct HashmapUserStore {
-    users: HashMap<String, User>
+    users: HashMap<Email, User>
 }
 
-impl HashmapUserStore {
-    pub fn add_user(&mut self, user: User) -> Result<(), UserStoreError> {
+#[async_trait::async_trait]
+impl UserStore for HashmapUserStore {
+    async fn add_user(&mut self, user: User) -> Result<(), UserStoreError> {
         //                            //  DONE->TODO:
         //                            //  Purpose: Insert new user.
         //                            //  Return: Result
@@ -44,7 +38,7 @@ impl HashmapUserStore {
     //                                //  `User` object or a `UserStoreError`.
     //                                //  Return `UserStoreError::UserNotFound` if the user can not be found.
     //                                //  
-    pub fn get_user(&self, email: &str) -> Result<User, UserStoreError> {
+    async fn get_user(&self, email: &Email) -> Result<User, UserStoreError> {
         //                            //  Purpose: Get existing user. 
         //                            //  Return: Result
         //                            //    Ok(User), if the user was found.
@@ -66,7 +60,7 @@ impl HashmapUserStore {
     //                                //  Return `UserStoreError::UserNotFound` if the user can not be found.
     //                                //  Return `UserStoreError::InvalidCredentials` if the password is incorrect.
     //                                //  
-    pub fn validate_user(&self, email: &str, password: &str) -> Result<(), UserStoreError> {
+    async fn validate_user(&self, email: &Email, password: &Password) -> Result<(), UserStoreError> {
         //                            //  Purpose: Validate user credentials.
         //                            //  Return: Result
         //                            //  Ok(())
@@ -101,10 +95,10 @@ impl HashmapUserStore {
 mod tests {
     use super::*;
 
-    fn create_vars() -> (HashmapUserStore, String, String, User) {
+    fn create_vars() -> (HashmapUserStore, Email, Password, User) {
         let user = User {
-            email: "test@example.com".to_owned(),
-            password: "password".to_owned(),
+            email: Email::parse("test@example.com".to_owned()).unwrap(),
+            password: Password::parse("password".to_owned()).unwrap(),
             requires_2fa: false,
         };
         (HashmapUserStore::default(),
@@ -129,11 +123,11 @@ mod tests {
         let (mut user_store, _, _, user) = create_vars();
 
         //                            //  Test adding a new user
-        let result = user_store.add_user(user.clone());
+        let result = user_store.add_user(user.clone()).await;
         assert!(result.is_ok());
 
         //                            //  Test adding the existing user
-        let result = user_store.add_user(user);
+        let result = user_store.add_user(user).await;
         assert_eq!(result, Err(UserStoreError::UserAlreadyExists));
     }
 
@@ -149,11 +143,13 @@ mod tests {
         user_store.users.insert(email.clone(), user.clone());
 
         //                            //  Test getting a user that exists
-        let result = user_store.get_user(&email);
+        let result = user_store.get_user(&email).await;
         assert_eq!(result, Ok(user));
 
         //                            //  Test getting a user that doesn't exists.
-        let result = user_store.get_user("nonexistent@example.com");
+        let result = user_store
+            .get_user(&Email::parse("nonexistent@example.com".to_owned()).unwrap())
+            .await;
         assert_eq!(result, Err(UserStoreError::UserNotFound));
         
     }
@@ -171,16 +167,19 @@ mod tests {
         user_store.users.insert(email.clone(), user.clone());
 
         //                            //  Test validating a user that exist with correct password
-        let result = user_store.validate_user(&email, &password);
+        let result = user_store.validate_user(&email, &password).await;
         assert_eq!(result, Ok(()));
 
         //                            //  Test validating a user that exist with incorrect password
-        let wrong_password = "wrongpassword".to_owned();
-        let result = user_store.validate_user(&email, &wrong_password);
+        let wrong_password = Password::parse("wrongpassword".to_owned()).unwrap();
+        let result = user_store
+            .validate_user(&email, &wrong_password)
+            .await;
         assert_eq!(result, Err(UserStoreError::InvalidCredentials));
 
         //                            //  Test validating a user that doesn't exist
-        let result = user_store.validate_user("nonexistent@example.com", &password);
+        let result = user_store
+            .validate_user(&Email::parse("nonexistent@example.com".to_owned()).unwrap(), &password).await;
         assert_eq!(result, Err(UserStoreError::UserNotFound));
     }
 }
