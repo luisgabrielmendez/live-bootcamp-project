@@ -1,7 +1,12 @@
 #[derive(Debug, Clone, PartialEq)]
+//                                    //  Encapsulate the actual value in a tuple struct.
+//                                    //  To create a password use:
+//                                    //    let password = Password.parse("password123");
+
 pub struct Password(String);
 
 impl Password {
+    //                                //  This forces to use this parse method to create a password.
     pub fn parse(s: String) -> Result<Password, String> {
         if validate_password(&s) {
             Ok(Self(s))
@@ -15,6 +20,9 @@ fn validate_password(s: &str) -> bool {
     s.len() >= 8
 }
 
+//                                    //  This AsRef implementation is used to extract the value from Password
+//                                    //  struct, with:
+//                                    //    password.as_ref()
 impl AsRef<str> for Password {
     fn as_ref(&self) -> &str {
         &self.0
@@ -25,6 +33,8 @@ impl AsRef<str> for Password {
 mod tests {
     use super::Password;
 
+    //                                //  This crate generate fake data.  It's used as dev dependency for
+    //                                //  tests only.
     use fake::faker::internet::en::Password as FakePassword;
     use fake::Fake;
 

@@ -2,7 +2,7 @@ use crate::helpers::TestApp;
 
 #[tokio::test]
 async fn verify_2fa_token() {
-    let app = TestApp::new().await;
+    let app = TestApp::new("verify_2fa - verify_2fa_token").await;
 
     let response = app.post_verify_2fa().await;
 

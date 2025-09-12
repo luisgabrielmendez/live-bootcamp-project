@@ -1,45 +1,9 @@
 use crate::{helpers::{get_random_email, TestApp}};
-use auth_service::{routes::SignupResponse, ErrorResponse};
-
-#[tokio::test]
-async fn signup_registers_new_user() {
-    let app = TestApp::new().await;
-
-    let random_email = get_random_email();
-
-    // DONE-TODO: add more malformed input test cases
-    let test_cases = [
-        serde_json::json!({
-            "password": "password123",
-            "requires2FA": true
-        }),
-        serde_json::json!({
-            "email": random_email,
-            "requires2FA": true
-        }),
-        serde_json::json!({
-            "email": random_email,
-            "password": "password123",
-        }),
-        serde_json::json!({
-        }),
-    ];
-
-    for test_case in test_cases.iter() {
-        let response = app.post_signup(test_case).await; // call `post_signup`
-        assert_eq!(
-            response.status().as_u16(),
-            422,
-            "Failed for input: {:?}",
-            test_case
-        );
-    }
-
-}
+use auth_service::{domain::ErrorResponse, routes::SignupResponse};
 
 #[tokio::test]
 async fn should_return_201_if_valid_input() {
-    let app = TestApp::new().await;
+    let app = TestApp::new("signup - should_return_201_if_valid_input").await;
 
     let random_email = get_random_email();
 
@@ -80,12 +44,12 @@ async fn should_return_400_if_invalid_input() {
     //                                //  code is returned.
 
     //                                //  PREPARE TEST ENVIRONMENT
-    let app = TestApp::new().await;
+    let app = TestApp::new("signup - should_return_400_if_invalid_input").await;
 
     let random_email = get_random_email();
 
     //                                //  Array of invalid inputs to test.
-    let signup_bodies = [
+    let signup_bodies = vec![
         //                            //  No email
         serde_json::json!({
             "email": "",
@@ -120,8 +84,8 @@ async fn should_return_400_if_invalid_input() {
     ];
 
     //                                //  Execute all tests
-    for signup_body in signup_bodies.iter() {
-        let response = app.post_signup(signup_body).await;
+    for signup_body in signup_bodies {
+        let response = app.post_signup(&signup_body).await;
         assert_eq!(response.status().as_u16(), 400, "Failed for input: {:?}", signup_body);
 
         assert_eq!(
@@ -141,7 +105,7 @@ async fn should_return_409_if_email_already_exists() {
     //                                //  409 HTTP status code
 
     //                                //  PREPARE TEST ENVIRONMENT
-    let app = TestApp::new().await;
+    let app = TestApp::new("signup - should_return_409_if_email_already_exists").await;
 
     let random_email = get_random_email();
 
@@ -169,4 +133,39 @@ async fn should_return_409_if_email_already_exists() {
             .error,
         "User already exists".to_owned()
     );
+}
+
+#[tokio::test]
+async fn should_return_422_if_malformed_input() {
+    let app = TestApp::new("signup - should_return_422_if_malformed_input").await;
+    let random_email = get_random_email();
+    let test_cases = vec![
+        serde_json::json!({
+            "password": "password123",
+            "requires2FA": true
+        }),
+        serde_json::json!({
+            "email": random_email,
+            "requires2FA": true
+        }),
+        serde_json::json!({
+            "email": random_email,
+            "password": "password123",
+        }),
+        serde_json::json!({
+            "email": random_email,
+            "password": "password123",
+            "requires2FA": "true"
+        }),
+        serde_json::json!({}),
+    ];
+    for test_case in test_cases {
+        let response = app.post_signup(&test_case).await;
+        assert_eq!(
+            response.status().as_u16(),
+            422,
+            "Failed for input: {:?}",
+            test_case
+        );
+    }
 }

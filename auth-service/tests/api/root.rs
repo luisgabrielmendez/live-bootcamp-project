@@ -3,7 +3,7 @@ use crate::helpers::TestApp;
 // Tokio's test macro is used to run the test in an async environment
 #[tokio::test]
 async fn root_returns_auth_ui() {
-    let app = TestApp::new().await;
+    let app = TestApp::new("root - root_returns_auth_ui").await;
 
     let response = app.get_root().await;
 

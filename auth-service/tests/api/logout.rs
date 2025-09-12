@@ -1,11 +1,14 @@
-use auth_service::{utils::constants::JWT_COOKIE_NAME, ErrorResponse};
+use auth_service::{
+    domain::ErrorResponse,
+    utils::constants::JWT_COOKIE_NAME,
+};
 use reqwest::Url;
 
 use crate::helpers::{get_random_email, TestApp};
 
 #[tokio::test]
 async fn should_return_200_if_valid_jwt_cookie() {
-    let app = TestApp::new().await;
+    let app = TestApp::new("logout - should_return_200_if_valid_jwt_cookie").await;
 
     let random_email = get_random_email();
 
@@ -51,7 +54,7 @@ async fn should_return_200_if_valid_jwt_cookie() {
 
 #[tokio::test]
 async fn should_return_400_if_jwt_cookie_missing() {
-    let app = TestApp::new().await;
+    let app = TestApp::new("logout - should_return_400_if_jwt_cookie_missing").await;
 
     let response = app.post_logout().await;
 
@@ -79,7 +82,7 @@ async fn should_return_400_if_jwt_cookie_missing() {
 
 #[tokio::test]
 async fn should_return_400_if_logout_called_twice_in_a_row() {
-    let app = TestApp::new().await;
+    let app = TestApp::new("logout - should_return_400_if_logout_called_twice_in_a_row").await;
 
     let random_email = get_random_email();
 
@@ -134,7 +137,7 @@ async fn should_return_400_if_logout_called_twice_in_a_row() {
 
 #[tokio::test]
 async fn should_return_401_if_invalid_token() {
-    let app = TestApp::new().await;
+    let app = TestApp::new("logout - should_return_400_if_logout_called_twice_in_a_row").await;
 
     // add invalid cookie
     app.cookie_jar.add_cookie_str(

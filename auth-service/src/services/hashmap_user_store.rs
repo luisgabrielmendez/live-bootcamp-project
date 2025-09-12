@@ -1,6 +1,12 @@
 use std::collections::HashMap;
 
-use crate::domain::{Email, Password, User, UserStore, UserStoreError};
+use crate::domain::{
+    Email,
+    Password,
+    User,
+    UserStore,
+    UserStoreError
+};
 
 
 //                                    //  DONE-TODO:
@@ -60,7 +66,12 @@ impl UserStore for HashmapUserStore {
     //                                //  Return `UserStoreError::UserNotFound` if the user can not be found.
     //                                //  Return `UserStoreError::InvalidCredentials` if the password is incorrect.
     //                                //  
-    async fn validate_user(&self, email: &Email, password: &Password) -> Result<(), UserStoreError> {
+    async fn validate_user(
+        &self,
+        email: &Email,
+        password: &Password
+    ) -> Result<(), UserStoreError>
+    {
         //                            //  Purpose: Validate user credentials.
         //                            //  Return: Result
         //                            //  Ok(())
